@@ -12,23 +12,33 @@ interface FormFieldProps<T extends FieldValues> {
 }
     
 
-const FormField = ({name, control, label, placeholder, type="text"}: FormFieldProps<T>) => {
-    return (
-        <Controller
-        control={control}
-        name={name}
-        render={({ field }) => (
-            <FormItem>
-                <FormLabel className='label'>{label}</FormLabel>
-                <FormControl>
-                <Input className='input' placeholder={placeholder} {...field} type={type} />
-                </FormControl>
-                <FormMessage />
-            </FormItem>
-            )}
+const FormField = <T extends FieldValues>({
+  name,
+  control,
+  label,
+  placeholder,
+  type = "text",
+}: FormFieldProps<T>) => {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel className="label">{label}</FormLabel>
+          <FormControl>
+            <Input
+              className="input"
+              placeholder={placeholder}
+              {...field}
+              type={type}
             />
-    )
- 
-}
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+};
 
 export default FormField
