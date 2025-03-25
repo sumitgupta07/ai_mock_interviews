@@ -75,28 +75,63 @@ export const setSeessionCookie = async (idToken: string) => {
 }
 
 export const getCurrentUser = async (): Promise<User | null> => {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('session')?.value;
-    if(!sessionCookie) {
-        return null;
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("session")?.value;
+  if (!sessionCookie) {
+    return null;
+  }
+  try {
+    const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
+    const userRecord = await db
+      .collection("users")
+      .doc(decodedClaims.uid)
+      .get();
+    if (!userRecord.exists) {
+      return null;
     }
-    try {
-        const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
-        const userRecord = await db.collection('users').doc(decodedClaims.uid).get();
-        if(!userRecord.exists) {
-            return null;
-        }
-        return {
-            ...userRecord.data(),
-            id: userRecord.id
-        } as User;
-    } catch (error) {
-        console.error("Error verifying session cookie", error);
-        return null;
-    }
-}
+    return {
+      ...userRecord.data(),
+      id: userRecord.id,
+    } as User;
+  } catch (error) {
+    console.error("Error verifying session cookie", error);
+    return null;
+  }
+};
 
 export const isAuthenticated = async () => {
-    const user = await getCurrentUser();
-    return !!user;
-}   
+  const user = await getCurrentUser();
+  return !!user;
+};
+
+export const getInterviewsByUserId = async (userId: string) => {
+  const interviews = await db
+    .collection("interviews")
+    .where("userId", "==", userId)
+    .orderBy("createdAt", "desc")
+    .get();
+  return interviews.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Interview[];
+};
+
+export const getLatestInteviews = async (params: GetLatestInterviewsParams) => {
+  const { userId, limit = 20 } = params;
+  if (!userId) {
+    console.error("Error: userId is undefined");
+    return []; // Return an empty array if userId is undefined
+  }
+  const interviews = await db
+    .collection("interviews")
+    .orderBy("createdAt", "desc")
+    .where("finalized", "==", true)
+    .where("userId", "!=", userId)
+    .limit(limit)
+    .get();
+  return interviews.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Interview[];
+};
+ 
