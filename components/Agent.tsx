@@ -1,6 +1,7 @@
 'use client';
 
 import { interviewer } from "@/constants";
+import { createFeedback } from "@/lib/actions/general.action";
 import { cn } from "@/lib/utils";
 import { vapiClient } from "@/lib/vapi.sdk";
 import Image from "next/image";
@@ -64,11 +65,12 @@ const Agent = ({
   }, []);
 
   const handleGenerateFeedback = async (transcript: SavedMessage[]) => {
-    const { success, id } = {
-      success: true,
-      id: "feedbackId",
-    };
-    if (success && id) {
+    const { success, feedbackId } = await createFeedback({
+      interviewId,
+      userId,
+      transcript,
+    });
+    if (success && feedbackId) {
       router.push(`/interview/${interviewId}/feedback`);
     } else {
       console.error("Error: Failed to generate feedback");
